@@ -87,6 +87,11 @@ InstallParams VLLMServer::get_install_params(const std::string& backend, const s
 #ifdef __linux__
         // One release per GPU target since 0.19.1: release tag is
         // {version}-{target_arch}, e.g. vllm0.20.1-rocm7.12.0-gfx1151.
+        LOG(INFO, "GABRIEL") << "Valor de target_arch: "<< target_arch << " find es: " << target_arch.find("gfx120") << std::endl;
+        if (target_arch.find("gfx120") != std::string::npos) {
+            target_arch = "gfx120X";
+        }
+        LOG(INFO, "GABRIEL") << "Valor POST de target_arch: "<< target_arch << std::endl;
         std::string release_tag = version + "-" + target_arch;
         params.version_override = release_tag;
         params.filename = release_tag + "-x64.tar.gz";

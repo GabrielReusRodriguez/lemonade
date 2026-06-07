@@ -1227,7 +1227,7 @@ json SystemInfo::build_recipes_info(const json& devices) {
     }
 
     // Default to preferring system llamacpp on Linux AMD systems.
-    // Can be set via config.json: {"llamacpp": {"prefer_system": true}}
+    // This can be overridden with LEMONADE_LLAMACPP_PREFER_SYSTEM=true/false.
     bool prefer_llamacpp_system = false;
     if (auto* cfg = RuntimeConfig::global()) {
         prefer_llamacpp_system = cfg->backend_bool("llamacpp", "prefer_system");
@@ -2094,12 +2094,43 @@ std::string SystemInfo::get_rocm_arch() {
 
         // Check AMD GPUs
         if (devices.contains("amd_gpu") && devices["amd_gpu"].is_array()) {
+
+            
+
+            // First I get the config lemonade->rocm_arch config value.
+            LOG(INFO, "Gabriel") << "Pre- get cfg " << std::endl;
+            std::string rocm_arch = "";
+            if (auto* cfg = RuntimeConfig::global()) {
+                rocm_arch = cfg->rocm_arch();
+            }
+            //if (auto* cfg = RuntimeConfig::global()) {
+            //    rocm_env_arch = cfg->backend_string("llamacpp", "rocm_arch");
+            //}
+            LOG(INFO, "Gabriel") << "cfg value is: "<< rocm_arch << std::endl;
+
+            // We must check the format of rocm_arch it can be 120000 or gfx1200 as backend_versions.json 
+            // Be careful! "gfx908" is valid.
+            std::regex rocm_arch_regex(R"(gfx\d{3,4})", std::regex::icase);
+
             for (const auto& gpu : devices["amd_gpu"]) {
                 if (gpu.value("available", false)) {
                     std::string name = gpu.value("name", "");
                     if (!name.empty()) {
-                        std::string arch = identify_rocm_arch_from_name(name);
+                        std::string arch = "";
+                        // If the lemonade rocm arch is informed, we pick up that one.
+                        if (!rocm_arch.empty()) {
+                            if (std::regex_search(rocm_arch, rocm_arch_regex)) {
+                                arch = rocm_arch;
+                            } else {
+                                arch = identify_rocm_arch_from_name(rocm_arch);
+                            }
+                            
+                        } else {
+                            // If the env var is NOT set up, We use the usual behaviour. It will choose the first active GPU found.
+                            arch = identify_rocm_arch_from_name(name);
+                        }
                         if (!arch.empty()) {
+                            LOG(DEBUG, "Server") << "The chosen ROCm architecture is: "<< arch << std::endl;
                             return arch;
                         }
                     }

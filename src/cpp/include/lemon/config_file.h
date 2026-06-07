@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <shared_mutex>
 #include <string>
 #include <nlohmann/json.hpp>
@@ -8,7 +9,7 @@ namespace lemon {
 
 using json = nlohmann::json;
 
-/// Manages reading and writing config.json in the lemonade cache dir.
+/// Manages reading, writing, and migrating config.json in the lemonade cache dir.
 class ConfigFile {
 public:
     /// Returns the full default config loaded from installed resource JSON.
@@ -26,6 +27,10 @@ public:
     static void save(const std::string& cache_dir, const json& config);
 
 private:
+    /// When config.json doesn't exist yet, read legacy LEMONADE_* environment
+    /// variables and overlay them on top of defaults.  Returns the merged config.
+    static json migrate_from_env(const json& defaults);
+
     static std::shared_mutex file_mutex_;
 };
 

@@ -222,6 +222,14 @@ std::string RuntimeConfig::rocm_channel() const {
     return config_["rocm_channel"].get<std::string>();
 }
 
+std::string RuntimeConfig::rocm_arch() const {
+    std::shared_lock lock(mutex_);
+    if (config_.contains("rocm_arch")){
+        return config_["rocm_arch"].get<std::string>();
+    }
+    return "";
+}
+
 std::string RuntimeConfig::rocm_channel_for_recipe(const std::string& recipe) const {
     std::string channel = rocm_channel();
     // sd-cpp currently has no nightly artifacts; use stable builds.
@@ -426,7 +434,14 @@ void RuntimeConfig::validate(const std::string& key, const json& value) const {
         if (channel != "stable" && channel != "nightly") {
             throw std::invalid_argument("'rocm_channel' must be either 'stable', or 'nightly'");
         }
-    } else if (is_backend_name(key)) {
+    }
+    else if (key == "rocm_arch") {
+        if (!value.is_string()) {
+            throw std::invalid_argument("'rocm_arch' must be a string");
+        }
+        //TODO: Valida que esté dentro de un gfx permitido 
+    }
+    else if (is_backend_name(key)) {
         if (!value.is_object()) {
             throw std::invalid_argument("'" + key + "' must be an object");
         }
