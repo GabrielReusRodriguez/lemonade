@@ -34,6 +34,7 @@ from utils.server_base import (
     ServerTestBase,
     run_server_tests,
     OpenAI,
+    pull_model_with_retry,
 )
 from utils.test_models import (
     PORT,
@@ -69,16 +70,9 @@ class EndpointTests(ServerTestBase):
             return
 
         print(f"\n[SETUP] Ensuring {ENDPOINT_TEST_MODEL} is pulled...")
-        response = requests.post(
-            f"http://localhost:{PORT}/api/v1/pull",
-            json={"model_name": ENDPOINT_TEST_MODEL},
-            timeout=TIMEOUT_MODEL_OPERATION,
-        )
-        if response.status_code == 200:
-            print(f"[SETUP] {ENDPOINT_TEST_MODEL} is ready")
-            cls._model_pulled = True
-        else:
-            print(f"[SETUP] Warning: pull returned {response.status_code}")
+        pull_model_with_retry(ENDPOINT_TEST_MODEL)
+        print(f"[SETUP] {ENDPOINT_TEST_MODEL} is ready")
+        cls._model_pulled = True
 
     def setUp(self):
         """Set up each test."""
@@ -1027,8 +1021,10 @@ class EndpointTests(ServerTestBase):
         self.assertIn(delete_response.status_code, [200, 422])
 
         recipe = "sd-cpp"
-        ## sd-cpp currently unavailable on MacOS
-        if platform.system() == "Darwin":
+        ## sd-cpp currently unavailable on MacOS or Linux ARM64
+        if platform.system() == "Darwin" or (
+            platform.system() == "Linux" and platform.machine() == "aarch64"
+        ):
             recipe = "llamacpp"
         recipe_backend = f"{recipe}_backend"
 
@@ -1128,6 +1124,8 @@ class EndpointTests(ServerTestBase):
         """
         if platform.system() == "Darwin":
             self.skipTest("sd-cpp pull tests are skipped on macOS in this suite")
+        if platform.system() == "Linux" and platform.machine() == "aarch64":
+            self.skipTest("sd-cpp not supported on Linux ARM64")
 
         model_name = f"user.Pull-Merge-Regression-{uuid.uuid4().hex[:8]}"
         image_defaults = {
