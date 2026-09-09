@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-09-05T02:51:42.429847+00:00",
-  "run_id": "33370563874",
-  "run_url": "https://github.com/GabrielReusRodriguez/lemonade/actions/runs/33370563874",
+  "generated_at": "2026-09-09T02:52:04.919004+00:00",
+  "run_id": "33845821930",
+  "run_url": "https://github.com/GabrielReusRodriguez/lemonade/actions/runs/33845821930",
   "repo": "GabrielReusRodriguez/lemonade",
   "repo_url": "https://github.com/GabrielReusRodriguez/lemonade",
   "actions_url": "https://github.com/GabrielReusRodriguez/lemonade/actions/workflows/benchmark-regression.yml",
-  "commit": "e1b3168370e8b2472acdbe08298267a4b556cf9e",
+  "commit": "55f10a6a4ceffa07ab1af71bf3e0db40ca9361cc",
   "lemonade_version": null,
   "by_model_scenario": {},
   "history": {}
